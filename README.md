@@ -1,7 +1,7 @@
 # HumanifyJS
 > Deobfuscate Javascript code using LLMs ("AI")
 
-This tool uses large language modeles (like ChatGPT & llama) and other tools to
+This tool uses large language models (like Grok, ChatGPT & Llama) and other tools to
 deobfuscate, unminify, transpile, decompile and unpack Javascript code. Note
 that LLMs don't perform any structural changes – they only provide hints to
 rename variables and functions. The heavy lifting is done by Babel on AST level
@@ -47,18 +47,18 @@ function splitString(inputString, chunkSize) {
 🚨 **NOTE:** 🚨
 
 Large files may take some time to process and use a lot of tokens if you use
-ChatGPT. For a rough estimate, the tool takes about 2 tokens per character to
+an online LLM provider. For a rough estimate, the tool takes about 2 tokens per character to
 process a file:
 
 ```shell
 echo "$((2 * $(wc -c < yourscript.min.js)))"
 ```
 
-So for refrence: a minified `bootstrap.min.js` would take about $0.5 to
-un-minify using ChatGPT.
+So for reference: a minified `bootstrap.min.js` would cost almost nothing to
+un-minify using generic models on OpenRouter, but could cost around $0.50 using GPT-4.
 
-Using `humanify local` is of course free, but may take more time, be less
-accurate and not possible with your existing hardware.
+Using `humanify local` is of course free, but may take more time and is
+dependent on your local hardware.
 
 ## Getting started
 
@@ -69,32 +69,74 @@ Prerequisites:
 
 ### Usage
 
-### Local mode
+Humanify supports multiple LLM providers. OpenRouter is recommended for the best balance of speed, cost, and quality.
 
-The local mode uses a pre-trained language model to deobfuscate the code. The
-model is not included in the repository due to its size, but you can download it
-using the following command:
+#### OpenRouter (Recommended)
 
-```shell
-humanify download 2b
-```
+The default and recommended way to use Humanify is with [OpenRouter](https://openrouter.ai/). It provides access to a wide range of models including the default `x-ai/grok-4.1-fast`.
 
-This downloads the `2b` model to your local machine. This is only needed to do
-once. You can also choose to download other models depending on your local
-resources. List the available models using `humanify download`.
-
-After downloading the model, you can run the tool with:
+1. Get your API key from [OpenRouter](https://openrouter.ai/).
+2. Set the `OPENROUTER_API_KEY` environment variable.
+3. Run the tool:
 
 ```shell
-humanify local obfuscated-file.js
+export OPENROUTER_API_KEY=your_key
+npx humanify openrouter file.js
 ```
 
-This uses your local GPU to deobfuscate the code. If you don't have a GPU, the
-tool will automatically fall back to CPU mode. Note that using a GPU speeds up
-the process significantly.
+You can specify a different model using the `-m` flag:
 
-Humanify has native support for Apple's M-series chips, and can fully utilize
-the GPU capabilities of your Mac.
+```shell
+npx humanify openrouter file.js -m anthropic/claude-3.5-sonnet
+```
+
+#### Local mode
+
+The local mode uses a pre-trained language model to deobfuscate the code.
+
+1. Download the model (only needed once):
+
+```shell
+npx humanify download 2b
+```
+
+2. Run the tool:
+
+```shell
+npx humanify local file.js
+```
+
+You can use the `-m` flag to specify a different model (e.g. `8b`):
+
+```shell
+npx humanify local file.js -m 8b
+```
+
+Humanify has native support for Apple's M-series chips.
+
+#### OpenAI
+
+To use OpenAI's models (like `gpt-4o-mini`):
+
+1. Set the `OPENAI_API_KEY` environment variable.
+2. Run the tool:
+
+```shell
+export OPENAI_API_KEY=your_key
+npx humanify openai file.js
+```
+
+#### Google Gemini
+
+To use Google's Gemini models (like `gemini-1.5-flash`):
+
+1. Set the `GEMINI_API_KEY` environment variable.
+2. Run the tool:
+
+```shell
+export GEMINI_API_KEY=your_key
+npx humanify gemini file.js
+```
 
 ## Features
 
