@@ -67,73 +67,7 @@ accurate and not possible with your existing hardware.
 Prerequisites:
 * Node.js >=20
 
-The preferred whay to install the tool is via npm:
-
-```shell
-npm install -g humanifyjs
-```
-
-This installs the tool to your machine globally. After the installation is done,
-you should be able to run the tool via:
-
-```shell
-humanify
-```
-
-If you want to try it out before installing, you can run it using `npx`:
-
-```
-npx humanifyjs
-```
-
-This will download the tool and run it locally. Note that all examples here
-expect the tool to be installed globally, but they should work by replacing
-`humanify` with `npx humanifyjs` as well.
-
 ### Usage
-
-Next you'll need to decide whether to use `openai`, `gemini` or `local` mode. In a
-nutshell:
-
-* `openai` or `gemini` mode
-  * Runs on someone else's computer that's specifically optimized for this kind
-    of things
-  * Costs money depending on the length of your code
-  * Is more accurate
-* `local` mode
-  * Runs locally
-  * Is free
-  * Is less accurate
-  * Runs as fast as your GPU does (it also runs on CPU, but may be very slow)
-
-See instructions below for each option:
-
-### OpenAI mode
-
-You'll need a ChatGPT API key. You can get one by signing up at
-https://openai.com/.
-
-There are several ways to provide the API key to the tool:
-```shell
-humanify openai --apiKey="your-token" obfuscated-file.js
-```
-
-Alternatively you can also use an environment variable `OPENAI_API_KEY`. Use
-`humanify --help` to see all available options.
-
-### Gemini mode
-
-You'll need a Google AI Studio key. You can get one by signing up at
-https://aistudio.google.com/.
-
-You need to provice the API key to the tool:
-
-```shell
-humanify gemini --apiKey="your-token" obfuscated-file.js
-```
-
-Alternatively you can also use an environment variable `GEMINI_API_KEY`. Use
-`humanify --help` to see all available options.
 
 ### Local mode
 
