@@ -1,16 +1,36 @@
 import fs from "fs/promises";
 import { ensureFileExists } from "./file-utils.js";
-import { webcrack } from "./plugins/webcrack.js";
+import { processWithWakaru } from "./plugins/wakaru.js";
 import { verbose } from "./verbose.js";
+import { generateModuleGraph } from "./module-graph.js";
+
+// We modify the plugin signature to accept an optional context object
+export type PluginContext = {
+  moduleGraph?: string;
+};
+
+// We need to extend the plugin type to allow a second argument for context
+type PluginFunction = (code: string, context?: PluginContext) => Promise<string>;
 
 export async function unminify(
   filename: string,
   outputDir: string,
-  plugins: ((code: string) => Promise<string>)[] = []
+  plugins: PluginFunction[] = []
 ) {
   ensureFileExists(filename);
   const bundledCode = await fs.readFile(filename, "utf-8");
-  const extractedFiles = await webcrack(bundledCode, outputDir);
+
+  // Replace webcrack with processWithWakaru
+  const extractedFiles = await processWithWakaru(bundledCode, outputDir);
+
+  // Generate Module Graph
+  console.log("Generating module graph...");
+  const moduleGraph = await generateModuleGraph(extractedFiles);
+  verbose.log("Module Graph:", moduleGraph);
+
+  const context: PluginContext = {
+    moduleGraph
+  };
 
   for (let i = 0; i < extractedFiles.length; i++) {
     console.log(`Processing file ${i + 1}/${extractedFiles.length}`);
@@ -23,8 +43,9 @@ export async function unminify(
       continue;
     }
 
+    // Reduce now passes context
     const formattedCode = await plugins.reduce(
-      (p, next) => p.then(next),
+      (p, next) => p.then(code => next(code, context)),
       Promise.resolve(code)
     );
 

@@ -2,6 +2,7 @@ import OpenAI from "openai";
 import { visitAllIdentifiers } from "../local-llm-rename/visit-all-identifiers.js";
 import { showPercentage } from "../../progress.js";
 import { verbose } from "../../verbose.js";
+import { PluginContext } from "../../unminify.js";
 
 export function openaiRename({
   apiKey,
@@ -16,7 +17,7 @@ export function openaiRename({
 }) {
   const client = new OpenAI({ apiKey, baseURL });
 
-  return async (code: string): Promise<string> => {
+  return async (code: string, context?: PluginContext): Promise<string> => {
     return await visitAllIdentifiers(
       code,
       async (name, surroundingCode) => {
@@ -24,7 +25,7 @@ export function openaiRename({
         verbose.log("Context: ", surroundingCode);
 
         const response = await client.chat.completions.create(
-          toRenamePrompt(name, surroundingCode, model)
+          toRenamePrompt(name, surroundingCode, model, context?.moduleGraph)
         );
         const result = response.choices[0].message?.content;
         if (!result) {
@@ -45,14 +46,21 @@ export function openaiRename({
 function toRenamePrompt(
   name: string,
   surroundingCode: string,
-  model: string
+  model: string,
+  moduleGraph?: string
 ): OpenAI.Chat.Completions.ChatCompletionCreateParamsNonStreaming {
+  let systemContent = `Rename Javascript variables/function \`${name}\` to have descriptive name based on their usage in the code.`;
+
+  if (moduleGraph) {
+    systemContent += `\n\nRefer to the following module graph to understand cross-file dependencies and maintain consistent naming:\n${moduleGraph}`;
+  }
+
   return {
     model,
     messages: [
       {
         role: "system",
-        content: `Rename Javascript variables/function \`${name}\` to have descriptive name based on their usage in the code."`
+        content: systemContent
       },
       {
         role: "user",

@@ -1,6 +1,7 @@
 import { visitAllIdentifiers } from "./local-llm-rename/visit-all-identifiers.js";
 import { verbose } from "../verbose.js";
 import { showPercentage } from "../progress.js";
+import { PluginContext } from "../unminify.js";
 import {
   GoogleGenerativeAI,
   ModelParams,
@@ -18,7 +19,7 @@ export function geminiRename({
 }) {
   const client = new GoogleGenerativeAI(apiKey);
 
-  return async (code: string): Promise<string> => {
+  return async (code: string, context?: PluginContext): Promise<string> => {
     return await visitAllIdentifiers(
       code,
       async (name, surroundingCode) => {
@@ -26,7 +27,7 @@ export function geminiRename({
         verbose.log("Context: ", surroundingCode);
 
         const model = client.getGenerativeModel(
-          toRenameParams(name, modelName)
+          toRenameParams(name, modelName, context?.moduleGraph)
         );
 
         const result = await model.generateContent(surroundingCode);
@@ -43,10 +44,16 @@ export function geminiRename({
   };
 }
 
-function toRenameParams(name: string, model: string): ModelParams {
+function toRenameParams(name: string, model: string, moduleGraph?: string): ModelParams {
+  let systemInstruction = `Rename Javascript variables/function \`${name}\` to have descriptive name based on their usage in the code.`;
+
+  if (moduleGraph) {
+    systemInstruction += `\n\nRefer to the following module graph to understand cross-file dependencies and maintain consistent naming:\n${moduleGraph}`;
+  }
+
   return {
     model,
-    systemInstruction: `Rename Javascript variables/function \`${name}\` to have descriptive name based on their usage in the code."`,
+    systemInstruction,
     generationConfig: {
       responseMimeType: "application/json",
       responseSchema: {

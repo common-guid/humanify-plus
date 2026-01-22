@@ -6,7 +6,8 @@ export async function unminifyVariableName(
   prompt: Prompt,
   variableName: string,
   filename: string,
-  code: string
+  code: string,
+  moduleGraph?: string
 ) {
   verbose.log("Unminifying variable name:", variableName);
   verbose.log("Surrounding code:", code);
@@ -19,8 +20,13 @@ export async function unminifyVariableName(
 
   verbose.log("Description:", description);
 
+  let systemPrompt = `You are a Code Assistant.`;
+  if (moduleGraph) {
+    systemPrompt += `\nRefer to the following module graph for context:\n${moduleGraph}`;
+  }
+
   const result = await prompt(
-    `You are a Code Assistant.`,
+    systemPrompt,
     `What would be a good name for the following function or a variable in Typescript? Don't mind the minified variable names.\n${description}`,
     gbnf`A good name would be '${/[a-zA-Z] [a-zA-Z0-9]{2,12}/}'`
   );
