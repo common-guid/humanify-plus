@@ -3,11 +3,12 @@ import { defineFilename } from "./define-filename.js";
 import { Prompt } from "./llama.js";
 import { unminifyVariableName } from "./unminify-variable-name.js";
 import { visitAllIdentifiers } from "./visit-all-identifiers.js";
+import { PluginContext } from "../../unminify.js";
 
 const PADDING_CHARS = 200;
 
 export const localReanme = (prompt: Prompt, contextWindowSize: number) => {
-  return async (code: string): Promise<string> => {
+  return async (code: string, context?: PluginContext): Promise<string> => {
     const filename = await defineFilename(
       prompt,
       code.slice(0, PADDING_CHARS * 2)
@@ -16,7 +17,7 @@ export const localReanme = (prompt: Prompt, contextWindowSize: number) => {
     return await visitAllIdentifiers(
       code,
       (name, surroundingCode) =>
-        unminifyVariableName(prompt, name, filename, surroundingCode),
+        unminifyVariableName(prompt, name, filename, surroundingCode, context?.moduleGraph),
       contextWindowSize,
       showPercentage
     );
